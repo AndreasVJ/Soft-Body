@@ -3,7 +3,7 @@ from math import pi, cos, sin
 from world import World
 from objects import SoftBody, Polygon
 
-
+FPS = 60
 WIDTH = 400
 HEIGHT = 600
 
@@ -25,7 +25,8 @@ rectangle = Polygon([[x, y],
                      [x - height*sin(angle), y + height*cos(angle)]],
                      (0, 255, 0))
 
-body = SoftBody("body.json", 1, 1)
+
+body = SoftBody([[150, 100], [170, 100], [150, 120], [170, 120]], [[1, 2, 3], [0, 2, 3], [0, 1, 3], [0, 1, 2]], 1, 1)
 
 world.add_static_object(rectangle)
 world.add_body(body)
@@ -42,7 +43,7 @@ while True:
                     exit()
     
     screen.fill((0, 0, 0))
-    dt = clock.tick(60) / 1000
+    dt = clock.tick(FPS) / 1000
 
     world.apply_gravity(dt)
     world.update_bodies(dt)

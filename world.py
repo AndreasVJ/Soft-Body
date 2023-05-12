@@ -35,5 +35,5 @@ class World:
 
     def update_bodies(self, dt) -> None:
         for body in self.bodies:
-            for i, p in enumerate(body.point):
-                p += body.vel[i] * dt
+            for i, n in enumerate(body.nodes):
+                n += body.vel[i] * dt

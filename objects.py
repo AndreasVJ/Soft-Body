@@ -1,36 +1,6 @@
 import pygame
 import numpy as np
-import json
 import sys
-from pathlib import Path
-
-
-class SoftBody:
-    def __init__(self, path, m, k) -> None:
-        with open(Path(__file__).parent / path, "r") as file:
-            data = json.load(file)
-
-            self.point = np.array(data["nodes"], dtype=float)
-            self.point_edges = data["edges"]
-
-            self.vel = np.array([[0, 0]] * len(self.point), dtype=float)
-
-        self.m = m
-        self.k = k
-    
-
-    def draw(self, screen: pygame.Surface) -> None:
-        for i, edges in enumerate(self.point_edges):
-            for edge in edges:
-                pygame.draw.line(screen, (255, 255, 255), self.point[i], self.point[edge], 2)
-
-        for point in self.point:
-            pygame.draw.circle(screen, (255, 0, 0), point, 5)
-    
-
-    def update(self, dt):
-        for i, p in enumerate(self.point):
-            p += self.vel[i]*dt
 
 
 class Polygon:
@@ -82,3 +52,31 @@ class Polygon:
     #     min_distance = sys.float_info.max
 
     #     for i, p in enumerate(self.points):
+
+
+class SoftBody:
+    def __init__(self, nodes: list[list[float, float]], edge_lists: list[list[int]], m, k) -> None:
+        self.nodes = np.array(nodes, dtype=float)
+        self.edge_lists = np.array(edge_lists)
+        self.vel = np.array([[0, 0]] * len(self.nodes), dtype=float)
+
+        self.m = m
+        self.k = k
+    
+
+    def draw(self, screen: pygame.Surface) -> None:
+        for i, edges in enumerate(self.edge_lists):
+            for edge in edges:
+                pygame.draw.line(screen, (255, 255, 255), self.nodes[i], self.nodes[edge], 2)
+
+        for node in self.nodes:
+            pygame.draw.circle(screen, (255, 0, 0), node, 5)
+    
+
+    def update(self, dt):
+        for i, p in enumerate(self.nodes):
+            p += self.vel[i]*dt
+
+
+# class RectangularSoftBody(SoftBody):
+#     def __init__(self, width: int, height: int, length: float) -> None:
