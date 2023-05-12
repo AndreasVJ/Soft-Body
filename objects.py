@@ -30,7 +30,7 @@ class Polygon:
         pygame.draw.polygon(screen, self.color, self.points)
     
 
-    def is_inside(self, x, y):
+    def is_inside(self, x, y) -> bool:
         count = 0
         if self.min_x < x and x < self.max_x and self.min_y < y and y < self.max_y:
             for i, p in enumerate(self.points):
@@ -57,7 +57,7 @@ class Polygon:
 class SoftBody:
     def __init__(self, nodes: list[list[float, float]], edge_lists: list[list[int]], m, k) -> None:
         self.nodes = np.array(nodes, dtype=float)
-        self.edge_lists = np.array(edge_lists)
+        self.edge_lists = edge_lists
         self.vel = np.array([[0, 0]] * len(self.nodes), dtype=float)
 
         self.m = m
@@ -67,16 +67,34 @@ class SoftBody:
     def draw(self, screen: pygame.Surface) -> None:
         for i, edges in enumerate(self.edge_lists):
             for edge in edges:
-                pygame.draw.line(screen, (255, 255, 255), self.nodes[i], self.nodes[edge], 2)
+                pygame.draw.line(screen, (255, 255, 255), self.nodes[i], self.nodes[edge], 1)
 
         for node in self.nodes:
-            pygame.draw.circle(screen, (255, 0, 0), node, 5)
+            pygame.draw.circle(screen, (255, 0, 0), node, 3)
     
 
-    def update(self, dt):
+    def update(self, dt) -> None:
         for i, p in enumerate(self.nodes):
             p += self.vel[i]*dt
 
 
-# class RectangularSoftBody(SoftBody):
-#     def __init__(self, width: int, height: int, length: float) -> None:
+class RectangularSoftBody(SoftBody):
+    def __init__(self, x:float, y: float, width: int, height: int, distance: float, m: float, k: float) -> None:
+        directions = [[1, 0], [1, 1], [0, 1], [-1, 1], [-1, 0], [-1, -1], [0, -1], [1, -1]]
+
+        nodes = []
+        edge_lists = []
+
+        for i in range(height):
+            for j in range(width):
+                nodes.append([x + j*distance, y + i*distance])
+                edge_lists.append([])
+
+        for i in range(height):
+            for j in range(width):
+                for d in directions:
+                    pos = [j + d[0], i + d[1]]
+                    if 0 <= pos[0] and pos[0] < width and 0 <= pos[1] and pos[1] < height:
+                        edge_lists[i*width + j].append(pos[1] * width + pos[0])
+        
+        super().__init__(nodes, edge_lists, m, k)

@@ -1,7 +1,7 @@
 import pygame
 from math import pi, cos, sin
 from world import World
-from objects import SoftBody, Polygon
+from objects import Polygon, RectangularSoftBody
 
 FPS = 60
 WIDTH = 400
@@ -26,7 +26,7 @@ rectangle = Polygon([[x, y],
                      (0, 255, 0))
 
 
-body = SoftBody([[150, 100], [170, 100], [150, 120], [170, 120]], [[1, 2, 3], [0, 2, 3], [0, 1, 3], [0, 1, 2]], 1, 1)
+body = RectangularSoftBody(100, 100, 10, 10, 20, 1, 1)
 
 world.add_static_object(rectangle)
 world.add_body(body)
