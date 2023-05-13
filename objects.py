@@ -30,7 +30,8 @@ class Polygon:
         pygame.draw.polygon(screen, self.color, self.points)
     
 
-    def is_inside(self, x, y) -> bool:
+    def is_inside(self, pos) -> bool:
+        x, y = pos
         count = 0
         if self.min_x < x and x < self.max_x and self.min_y < y and y < self.max_y:
             for i, p in enumerate(self.points):
@@ -48,39 +49,62 @@ class Polygon:
         return count%2 == 1
     
 
-    # def get_closest_point(self, x, y) -> tuple[tuple[float, float], tuple[float, float]]:
-    #     min_distance = sys.float_info.max
+    def get_reflection(self, pos, vel) -> tuple[np.ndarray[float, float], np.ndarray[float, float]]:
 
-    #     for i, p in enumerate(self.points):
+        # Not working at all
+
+        min_distance = sys.float_info.max
+        result = None
+
+        x, y = pos
+        if vel[0] == 0:
+            vel[0] = 0.0001
+        a = vel[1] / vel[0]
+        y0 = y - a*x
+
+        for i, p in enumerate(self.points):
+            if a == self.a[i]:
+                continue
+            intersection_x = (self.y0[i] - y0) / (a - self.a[i])
+            if min(p[0], self.points[i - 1][0]) <= intersection_x and intersection_x <= max(p[0], self.points[i - 1][0]):
+                intersection_y = a*intersection_x + y0
+                distance = np.sqrt((intersection_x - x)**2 + (intersection_y - y)**2)
+                if distance < min_distance:
+                    min_distance = distance
+                    direction = np.array([1, np.tan(2*np.arctan(self.a[i]) - np.arctan(a))/vel[0]])
+                    result = np.array([intersection_x, intersection_y]), direction / np.sqrt(direction[0]**2 + direction[1]**2) * np.sqrt(vel[0]**2 + vel[1]**2)
+        
+        return result
 
 
 class SoftBody:
-    def __init__(self, nodes: list[list[float, float]], edge_lists: list[list[int]], m, k) -> None:
+    def __init__(self, nodes: list[list[float, float]], edges: list[list[int, int]], edge_length_lists: list[list[float]], m, k) -> None:
         self.nodes = np.array(nodes, dtype=float)
-        self.edge_lists = edge_lists
         self.vel = np.array([[0, 0]] * len(self.nodes), dtype=float)
+        self.edges = edges
+        self.edge_length_lists = edge_length_lists
 
         self.m = m
         self.k = k
     
 
     def draw(self, screen: pygame.Surface) -> None:
-        for i, edges in enumerate(self.edge_lists):
-            for edge in edges:
-                pygame.draw.line(screen, (255, 255, 255), self.nodes[i], self.nodes[edge], 1)
+        for edge in self.edges:
+            pygame.draw.line(screen, (255, 255, 255), self.nodes[edge[0]], self.nodes[edge[1]], 1)
 
         for node in self.nodes:
             pygame.draw.circle(screen, (255, 0, 0), node, 3)
     
 
     def update(self, dt) -> None:
+        changes = []
         for i, p in enumerate(self.nodes):
             p += self.vel[i]*dt
 
 
 class RectangularSoftBody(SoftBody):
     def __init__(self, x:float, y: float, width: int, height: int, distance: float, m: float, k: float) -> None:
-        directions = [[1, 0], [1, 1], [0, 1], [-1, 1], [-1, 0], [-1, -1], [0, -1], [1, -1]]
+        directions = [[1, 0], [1, 1], [0, 1]]#, [-1, 1], [-1, 0], [-1, -1], [0, -1], [1, -1]]
 
         nodes = []
         edge_lists = []
@@ -90,11 +114,11 @@ class RectangularSoftBody(SoftBody):
                 nodes.append([x + j*distance, y + i*distance])
                 edge_lists.append([])
 
-        for i in range(height):
-            for j in range(width):
+        for i in range(height - 1):
+            for j in range(width - 1):
                 for d in directions:
                     pos = [j + d[0], i + d[1]]
-                    if 0 <= pos[0] and pos[0] < width and 0 <= pos[1] and pos[1] < height:
-                        edge_lists[i*width + j].append(pos[1] * width + pos[0])
+                    edge_lists.append([i*width + j, pos[1] * width + pos[0]])
+                    # if 0 <= pos[0] and pos[0] < width and 0 <= pos[1] and pos[1] < height:
         
-        super().__init__(nodes, edge_lists, m, k)
+        super().__init__(nodes, edge_lists, [], m, k)

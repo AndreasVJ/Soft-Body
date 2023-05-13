@@ -27,13 +27,23 @@ class World:
             body.draw(screen)
     
 
-    def apply_gravity(self, dt) -> None:
+    def apply_gravity(self, dt: float) -> None:
         for body in self.bodies:
             for v in body.vel:
                 v[1] += self.g * dt
     
 
-    def update_bodies(self, dt) -> None:
+    def update_bodies(self, dt: float) -> None:
         for body in self.bodies:
             for i, n in enumerate(body.nodes):
                 n += body.vel[i] * dt
+
+
+    def handle_collisions(self) -> None:
+        for body in self.bodies:
+            for object in self.static_objects:
+                for i, node in enumerate(body.nodes):
+                    if object.is_inside(node):
+                        collision_point, new_direction = object.get_reflection(node, body.vel[i])
+                        body.nodes[i] = collision_point
+                        body.vel[i] = new_direction
