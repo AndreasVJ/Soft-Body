@@ -21,12 +21,12 @@ angle = pi/4
 
 rectangle = Polygon([[x, y], 
                      [x + width*cos(angle), y + width*sin(angle)], 
-                     [x + width*cos(angle) - height*sin(angle), y + width*sin(angle) + height*cos(angle)], 
+                     [x + width*cos(angle) - height*sin(angle), y + width*sin(angle) + height*cos(angle)],
                      [x - height*sin(angle), y + height*cos(angle)]],
                      (0, 255, 0))
 
 
-body = RectangularSoftBody(100, 100, 10, 10, 20, 1, 1)
+body = RectangularSoftBody(100, 100, 6, 4, 20, 1, 1000)
 
 world.add_static_object(rectangle)
 world.add_body(body)

@@ -51,7 +51,7 @@ class Polygon:
 
     def get_reflection(self, pos, vel) -> tuple[np.ndarray[float, float], np.ndarray[float, float]]:
 
-        # Not working at all :(
+        # Not working properly :(
 
         min_distance = sys.float_info.max
         result = None
@@ -78,11 +78,11 @@ class Polygon:
 
 
 class SoftBody:
-    def __init__(self, nodes: list[list[float, float]], edges: list[list[int, int]], edge_length_lists: list[list[float]], m, k) -> None:
+    def __init__(self, nodes: list[list[float, float]], edges: list[list[int, int]], equilibrium: list[list[float]], m, k) -> None:
         self.nodes = np.array(nodes, dtype=float)
         self.vel = np.array([[0, 0]] * len(self.nodes), dtype=float)
         self.edges = edges
-        self.edge_length_lists = edge_length_lists
+        self.equilibrium = equilibrium
 
         self.m = m
         self.k = k
@@ -97,7 +97,16 @@ class SoftBody:
     
 
     def update(self, dt) -> None:
-        changes = []
+        for i, edge in enumerate(self.edges):
+            distance = self.nodes[edge[1]] - self.nodes[edge[0]]
+            abs_distance = np.sqrt(distance[0]**2 + distance[1]**2)
+
+            direction = distance / abs_distance
+            a = self.k * (abs_distance - self.equilibrium[i]) / self.m
+
+            self.vel[edge[0]] += a*direction*dt
+            self.vel[edge[1]] -= a*direction*dt
+
         for i, p in enumerate(self.nodes):
             p += self.vel[i]*dt
 
@@ -106,24 +115,36 @@ class RectangularSoftBody(SoftBody):
     def __init__(self, x:float, y: float, width: int, height: int, distance: float, m: float, k: float) -> None:
         nodes = []
         edges = []
+        equilibrium = []
 
         for i in range(height):
             for j in range(width):
                 nodes.append([x + j*distance, y + i*distance])
 
+
         for i in range(height - 1):
             for j in range(width - 1):
-                for d in [[1, 0], [1, 1], [0, 1]]:
-                    pos = [j + d[0], i + d[1]]
-                    edges.append([i*width + j, pos[1] * width + pos[0]])
-    
-                edges.append([(i + 1)*width + j, i*width + j + 1])
+                edges.append([i*width + j, i*width + j + 1])
+                equilibrium.append(distance)
+                
+                edges.append([i*width + j, (i + 1)*width + j + 1])
+                equilibrium.append(distance*1.41)
+                
+                edges.append([i*width + j, (i + 1)*width + j])
+                equilibrium.append(distance)
 
-        for i in range (height - 1):
+                edges.append([(i + 1)*width + j, i*width + j + 1])
+                equilibrium.append(distance*1.41)
+
+
+        for i in range (1, height):
             edges.append([width*i - 1, width*(i + 1) - 1])
+            equilibrium.append(distance)
         
+
         for i in range (width - 1):
             edges.append([width*(height - 1) + i, width*(height - 1) + i + 1])
+            equilibrium.append(distance)
         
 
-        super().__init__(nodes, edges, [], m, k)
+        super().__init__(nodes, edges, equilibrium, m, k)

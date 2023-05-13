@@ -35,8 +35,7 @@ class World:
 
     def update_bodies(self, dt: float) -> None:
         for body in self.bodies:
-            for i, n in enumerate(body.nodes):
-                n += body.vel[i] * dt
+            body.update(dt)
 
 
     def handle_collisions(self) -> None:
