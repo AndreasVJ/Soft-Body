@@ -51,7 +51,7 @@ class Polygon:
 
     def get_reflection(self, pos, vel) -> tuple[np.ndarray[float, float], np.ndarray[float, float]]:
 
-        # Not working at all
+        # Not working at all :(
 
         min_distance = sys.float_info.max
         result = None
@@ -104,21 +104,26 @@ class SoftBody:
 
 class RectangularSoftBody(SoftBody):
     def __init__(self, x:float, y: float, width: int, height: int, distance: float, m: float, k: float) -> None:
-        directions = [[1, 0], [1, 1], [0, 1]]#, [-1, 1], [-1, 0], [-1, -1], [0, -1], [1, -1]]
-
         nodes = []
-        edge_lists = []
+        edges = []
 
         for i in range(height):
             for j in range(width):
                 nodes.append([x + j*distance, y + i*distance])
-                edge_lists.append([])
 
         for i in range(height - 1):
             for j in range(width - 1):
-                for d in directions:
+                for d in [[1, 0], [1, 1], [0, 1]]:
                     pos = [j + d[0], i + d[1]]
-                    edge_lists.append([i*width + j, pos[1] * width + pos[0]])
-                    # if 0 <= pos[0] and pos[0] < width and 0 <= pos[1] and pos[1] < height:
+                    edges.append([i*width + j, pos[1] * width + pos[0]])
+    
+                edges.append([(i + 1)*width + j, i*width + j + 1])
+
+        for i in range (height - 1):
+            edges.append([width*i - 1, width*(i + 1) - 1])
         
-        super().__init__(nodes, edge_lists, [], m, k)
+        for i in range (width - 1):
+            edges.append([width*(height - 1) + i, width*(height - 1) + i + 1])
+        
+
+        super().__init__(nodes, edges, [], m, k)
